@@ -71,7 +71,6 @@ class _RTDFeedState extends State<RTDFeed> {
     AlertFeed();
     VehicaleFeed();
     TripFeed();
-
     super.initState();
   }
 
