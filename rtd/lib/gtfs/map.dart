@@ -2,26 +2,61 @@ import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter/src/widgets/placeholder.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-
 class MapView extends StatefulWidget {
-  const MapView({super.key});
+  const MapView(
+      {required this.lat,
+      required this.long,
+      required this.vehicleId,
+      required this.line,
+      required this.route,
+      required this.status,
+      super.key});
+
+  final double lat;
+  final double long;
+  final String line;
+  final String route;
+  final String vehicleId;
+  final String status;
 
   @override
   State<MapView> createState() => _MapViewState();
 }
 
 class _MapViewState extends State<MapView> {
+  late LatLng _kMapCenter;
+  late CameraPosition _kInitialPosition;
+  final Map<String, Marker> _markers = {};
 
-  static final LatLng _kMapCenter =
-      LatLng(19.018255973653343, 72.84793849278007);
+  Future<void> _onMapCreated(GoogleMapController controller) async {
+    setState(() {
+      _markers.clear();
 
-  static final CameraPosition _kInitialPosition =
-      CameraPosition(target: _kMapCenter, zoom: 11.0, tilt: 0, bearing: 0);
+      final marker = Marker(
+        markerId: MarkerId(widget.vehicleId), //replace with variable!!!
+        position: LatLng(widget.lat, widget.long),
+        infoWindow: InfoWindow(
+          title: "The " + widget.line + " line",
+          snippet: widget.status + " " + widget.route,
+        ),
+      );
+      _markers[widget.vehicleId] = marker;
+    });
+  }
+
+  @override
+  void initState() {
+    _kMapCenter = LatLng(widget.lat, widget.long);
+    _kInitialPosition =
+        CameraPosition(target: _kMapCenter, zoom: 11.0, tilt: 0, bearing: 0);
+  }
 
   @override
   Widget build(BuildContext context) {
     return GoogleMap(
+      onMapCreated: _onMapCreated,
       initialCameraPosition: _kInitialPosition,
+      markers: _markers.values.toSet(),
     );
   }
 }

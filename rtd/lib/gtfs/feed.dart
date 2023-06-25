@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:gtfs_realtime_bindings/gtfs_realtime_bindings.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:rtd/gtfs/map.dart';
 import '../data_sets/route_data.dart';
+import '../data_sets/stop_data.dart';
 
 class RTDFeed extends StatefulWidget {
   const RTDFeed({super.key});
@@ -82,30 +84,89 @@ class _RTDFeedState extends State<RTDFeed> {
       child: ListView.builder(
           itemCount: vehicles.length,
           itemBuilder: (BuildContext context, int index) {
-            return ListTile(
-                leading: Text(routeData[
-                            vehicles[index].vehicle.trip.routeId.toString()] ==
-                        null
-                    ? "no route data"
-                    : routeData[vehicles[index]
-                            .vehicle
-                            .trip
-                            .routeId
-                            .toString()]!["route_short_name"]
-                        .toString()),
-                title: Text(vehicles[index].vehicle.toString()),
-                subtitle: Text(
-                    routeData[vehicles[index].vehicle.trip.routeId.toString()] ==
-                            null
-                        ? "no route data"
-                        : routeData[vehicles[index]
-                                .vehicle
-                                .trip
-                                .routeId
-                                .toString()]!["route_long_name"]
-                            .toString()),
-                trailing: IconButton(
-                    onPressed: () {}, icon: Icon(Icons.location_on)));
+            return routeData[vehicles[index].vehicle.trip.routeId.toString()] ==
+                    null
+                ? SizedBox()
+                : routeData[vehicles[index].vehicle.trip.routeId.toString()]![
+                                "route_short_name"]
+                            .toString() ==
+                        "E"
+                    ? ListTile(
+                        leading: Text(routeData[vehicles[index]
+                                    .vehicle
+                                    .trip
+                                    .routeId
+                                    .toString()] ==
+                                null
+                            ? "no route data"
+                            : routeData[vehicles[index]
+                                    .vehicle
+                                    .trip
+                                    .routeId
+                                    .toString()]!["route_short_name"]
+                                .toString()),
+                        title: Text(routeData[vehicles[index]
+                                    .vehicle
+                                    .trip
+                                    .routeId
+                                    .toString()] ==
+                                null
+                            ? "no route data"
+                            : routeData[vehicles[index]
+                                    .vehicle
+                                    .trip
+                                    .routeId
+                                    .toString()]!["route_long_name"]
+                                .toString()),
+                        trailing: IconButton(
+                            onPressed: () {
+                              Navigator.of(context).pushReplacement(
+                                MaterialPageRoute(
+                                    builder: (context) => MapView(
+                                        lat: vehicles[index]
+                                            .vehicle
+                                            .position
+                                            .latitude,
+                                        long: vehicles[index]
+                                            .vehicle
+                                            .position
+                                            .longitude,
+                                        line: routeData[vehicles[index].vehicle.trip.routeId.toString()] == null
+                                            ? "line unknown"
+                                            : routeData[vehicles[index]
+                                                        .vehicle
+                                                        .trip
+                                                        .routeId
+                                                        .toString()]![
+                                                    "route_short_name"]
+                                                .toString(),
+                                        vehicleId:
+                                            vehicles[index].vehicle.vehicle.id,
+                                        status: vehicles[index]
+                                            .vehicle
+                                            .currentStatus
+                                            .toString(),
+                                        route: routeData[vehicles[index].vehicle.trip.routeId.toString()] == null
+                                            ? "route name unknown"
+                                            : routeData[vehicles[index]
+                                                    .vehicle
+                                                    .trip
+                                                    .routeId
+                                                    .toString()]!["route_long_name"]
+                                                .toString())),
+                              );
+                            },
+                            icon: Icon(Icons.location_on)),
+                        subtitle: Text(
+                            vehicles[index].vehicle.currentStatus.toString() +
+                                " " +
+                                stopData[vehicles[index]
+                                        .vehicle
+                                        .stopId
+                                        .toString()]!["stop_name"]
+                                    .toString()),
+                      )
+                    : SizedBox();
           }),
     );
   }
