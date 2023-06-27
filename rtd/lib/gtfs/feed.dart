@@ -19,6 +19,8 @@ class _RTDFeedState extends State<RTDFeed> {
   late List<FeedEntity> vehicles = [];
   late GlobalKey<ScaffoldState> _scaffoldKey;
 
+  final status = ["Incoming at", "Stopped at", "In transit to"];
+
   final snack = SnackBar(
     content: const Text('Page Refreshed'),
   );
@@ -147,34 +149,15 @@ class _RTDFeedState extends State<RTDFeed> {
                                   child: ListTile(
                                     isThreeLine: true,
                                     //name of the route selected
-                                    leading: Text(routeData[vehicles[index]
-                                                .vehicle
-                                                .trip
-                                                .routeId
-                                                .toString()] ==
-                                            null
-                                        ? "no route data"
-                                        : routeData[vehicles[index]
-                                                    .vehicle
-                                                    .trip
-                                                    .routeId
-                                                    .toString()]![
-                                                "route_short_name"]
-                                            .toString()),
+                                    leading: IconButton(
+                                      onPressed: () {
+                                        //popup for station list here
+                                      },
+                                      icon: Icon(Icons.list_sharp),
+                                    ),
                                     //descriptive name of the route
-                                    title: Text(routeData[vehicles[index]
-                                                .vehicle
-                                                .trip
-                                                .routeId
-                                                .toString()] ==
-                                            null
-                                        ? "no route data"
-                                        : routeData[vehicles[index]
-                                                .vehicle
-                                                .trip
-                                                .routeId
-                                                .toString()]!["route_long_name"]
-                                            .toString()),
+                                    title: Text(
+                                        "${status[vehicles[index].vehicle.currentStatus.value]}${stopData[vehicles[index].vehicle.stopId]!["stop_name"]}"),
                                     //the current location of the selected train/bus
                                     trailing: IconButton(
                                         onPressed: () {
@@ -235,7 +218,7 @@ class _RTDFeedState extends State<RTDFeed> {
                                         icon: const Icon(Icons.location_on)),
                                     //route direction information & current status of movement
                                     subtitle: Text(
-                                        "${routeData[vehicles[index].vehicle.trip.routeId.toString()]!["route_desc"]} and is ${vehicles[index].vehicle.currentStatus} ${stopData[vehicles[index].vehicle.stopId.toString()]!["stop_name"]}. Reported on ${DateTime.fromMillisecondsSinceEpoch(vehicles[index].vehicle.timestamp.toInt() * 1000).toString()}"),
+                                        "Status update on ${DateTime.fromMillisecondsSinceEpoch(vehicles[index].vehicle.timestamp.toInt() * 1000).toString()}"),
                                   ),
                                 ),
                               )
