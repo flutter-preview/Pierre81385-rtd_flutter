@@ -1,0 +1,30 @@
+{
+  "DPSWK": {
+    "date": 20230704,
+    "exception_type": 2
+  },
+  "MT": {
+    "date": 20230704,
+    "exception_type": 2
+  },
+  "P_Fri": {
+    "date": 20230704,
+    "exception_type": 2
+  },
+  "SU": {
+    "date": 20230704,
+    "exception_type": 1
+  },
+  "WK": {
+    "date": 20230704,
+    "exception_type": 2
+  },
+  "MT_3397": {
+    "date": 20230704,
+    "exception_type": 2
+  },
+  "MT_3398": {
+    "date": 20230704,
+    "exception_type": 2
+  }
+}
