@@ -82,11 +82,13 @@ class _RTDFeedState extends State<RTDFeed> {
     print(stops);
 
     return AlertDialog(
-      title: const Text('Popup example'),
+      title: const Text('Service Alerts'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: const <Widget>[],
+        children: const <Widget>[
+          Text('There are no service alerts at this time.')
+        ],
       ),
       actions: <Widget>[
         OutlinedButton(
@@ -238,7 +240,7 @@ class _RTDFeedState extends State<RTDFeed> {
                                                   ),
                                                 );
                                               },
-                                              icon: Icon(Icons.list_sharp),
+                                              icon: Icon(Icons.railway_alert),
                                             ),
                                             //descriptive name of the route
                                             title: Text(
@@ -279,7 +281,7 @@ class _RTDFeedState extends State<RTDFeed> {
                                                                       )));
                                                 },
                                                 icon: const Icon(
-                                                    Icons.location_on)),
+                                                    Icons.place_outlined)),
                                             //route direction information & current status of movement
                                             subtitle: Text(
                                                 "Status update on ${DateTime.fromMillisecondsSinceEpoch(vehicles[index].vehicle.timestamp.toInt() * 1000).toString()}"),
