@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:rtd/gtfs/map.dart';
 import '../data_sets/route_data.dart';
 import '../data_sets/stop_data.dart';
+import '../data_sets/trip_data.dart';
 
 class RTDFeed extends StatefulWidget {
   const RTDFeed({required this.vehicle, super.key});
@@ -18,11 +19,12 @@ class _RTDFeedState extends State<RTDFeed> {
   late List<FeedEntity> trips = [];
   late List<FeedEntity> vehicles = [];
   late GlobalKey<ScaffoldState> _scaffoldKey;
+  late bool showStations;
 
   final status = ["Incoming at", "Stopped at", "In transit to"];
 
-  final snack = SnackBar(
-    content: const Text('Page Refreshed'),
+  final snack = const SnackBar(
+    content: Text('Data Refreshed'),
   );
 
   void AlertFeed() async {
@@ -72,12 +74,38 @@ class _RTDFeedState extends State<RTDFeed> {
     }
   }
 
+  Widget _buildPopupDialog(BuildContext context, index) {
+    List<TripUpdate_StopTimeUpdate> stops = [];
+    for (var i = 0; i <= trips[index].tripUpdate.stopTimeUpdate.length; i++) {
+      stops = trips[index].tripUpdate.stopTimeUpdate.toList();
+    }
+    print(stops);
+
+    return AlertDialog(
+      title: const Text('Popup example'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: const <Widget>[],
+      ),
+      actions: <Widget>[
+        OutlinedButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: const Text('Close'),
+        ),
+      ],
+    );
+  }
+
   @override
   void initState() {
     AlertFeed();
     VehicaleFeed();
     TripFeed();
     _scaffoldKey = GlobalKey();
+    showStations = false;
     super.initState();
   }
 
@@ -112,6 +140,12 @@ class _RTDFeedState extends State<RTDFeed> {
               physics: const AlwaysScrollableScrollPhysics(),
               itemCount: vehicles.length,
               itemBuilder: (BuildContext context, int index) {
+                List<TripUpdate_StopTimeUpdate> stops = [];
+                for (var i = 0;
+                    i <= trips[index].tripUpdate.stopTimeUpdate.length;
+                    i++) {
+                  stops = trips[index].tripUpdate.stopTimeUpdate.toList();
+                }
                 //get route data of the selected train/bus
                 return routeData[
                             vehicles[index].vehicle.trip.routeId.toString()] ==
@@ -146,79 +180,149 @@ class _RTDFeedState extends State<RTDFeed> {
                                       ),
                                     ],
                                   ),
-                                  child: ListTile(
-                                    isThreeLine: true,
-                                    //name of the route selected
-                                    leading: IconButton(
-                                      onPressed: () {
-                                        //popup for station list here
-                                      },
-                                      icon: Icon(Icons.list_sharp),
-                                    ),
-                                    //descriptive name of the route
-                                    title: Text(
-                                        "${status[vehicles[index].vehicle.currentStatus.value]}${stopData[vehicles[index].vehicle.stopId]!["stop_name"]}"),
-                                    //the current location of the selected train/bus
-                                    trailing: IconButton(
+                                  child: Column(
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius: const BorderRadius
+                                                    .only(
+                                                topLeft: Radius.circular(10),
+                                                topRight: Radius.circular(10),
+                                                bottomLeft: Radius.circular(10),
+                                                bottomRight:
+                                                    Radius.circular(10)),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.grey
+                                                    .withOpacity(0.5),
+                                                spreadRadius: 5,
+                                                blurRadius: 7,
+                                                offset: const Offset(0,
+                                                    3), // changes position of shadow
+                                              ),
+                                            ],
+                                          ),
+                                          child: ListTile(
+                                            isThreeLine: true,
+                                            //name of the route selected
+                                            leading: IconButton(
+                                              onPressed: () {
+                                                //popup for station list here
+                                                showDialog(
+                                                  context: context,
+                                                  builder:
+                                                      (BuildContext context) =>
+                                                          _buildPopupDialog(
+                                                    context,
+                                                    trips.indexWhere(
+                                                        (element) =>
+                                                            element.tripUpdate
+                                                                .trip.tripId ==
+                                                            vehicles[index]
+                                                                .vehicle
+                                                                .trip
+                                                                .tripId),
+                                                  ),
+                                                );
+                                              },
+                                              icon: Icon(Icons.list_sharp),
+                                            ),
+                                            //descriptive name of the route
+                                            title: Text(
+                                                "${routeData[vehicles[index].vehicle.trip.routeId.toString()]!["route_short_name"].toString()} Line heading to ${tripData[vehicles[index].vehicle.trip.routeId.toString()]?["trip_headsign"].toString()} ${status[vehicles[index].vehicle.currentStatus.value].toUpperCase()} ${stopData[vehicles[index].vehicle.stopId]!["stop_name"]}"),
+                                            //the current location of the selected train/bus
+                                            trailing: IconButton(
+                                                onPressed: () {
+                                                  Navigator.of(context)
+                                                      .pushReplacement(
+                                                          MaterialPageRoute(
+                                                              builder:
+                                                                  (context) =>
+                                                                      MapView(
+                                                                        lat: vehicles[index]
+                                                                            .vehicle
+                                                                            .position
+                                                                            .latitude,
+                                                                        long: vehicles[index]
+                                                                            .vehicle
+                                                                            .position
+                                                                            .longitude,
+                                                                        line: routeData[vehicles[index].vehicle.trip.routeId.toString()] ==
+                                                                                null
+                                                                            ? "line unknown"
+                                                                            : routeData[vehicles[index].vehicle.trip.routeId.toString()]!["route_short_name"].toString(),
+                                                                        vehicleId: vehicles[index]
+                                                                            .vehicle
+                                                                            .vehicle
+                                                                            .id,
+                                                                        status: vehicles[index]
+                                                                            .vehicle
+                                                                            .currentStatus
+                                                                            .toString(),
+                                                                        route: routeData[vehicles[index].vehicle.trip.routeId.toString()] ==
+                                                                                null
+                                                                            ? "route name unknown"
+                                                                            : routeData[vehicles[index].vehicle.trip.routeId.toString()]!["route_long_name"].toString(),
+                                                                      )));
+                                                },
+                                                icon: const Icon(
+                                                    Icons.location_on)),
+                                            //route direction information & current status of movement
+                                            subtitle: Text(
+                                                "Status update on ${DateTime.fromMillisecondsSinceEpoch(vehicles[index].vehicle.timestamp.toInt() * 1000).toString()}"),
+                                          ),
+                                        ),
+                                      ),
+                                      OutlinedButton(
                                         onPressed: () {
-                                          Navigator.of(context)
-                                              .pushReplacement(
-                                                  MaterialPageRoute(
-                                                      builder:
-                                                          (context) => MapView(
-                                                                lat: vehicles[
-                                                                        index]
-                                                                    .vehicle
-                                                                    .position
-                                                                    .latitude,
-                                                                long: vehicles[
-                                                                        index]
-                                                                    .vehicle
-                                                                    .position
-                                                                    .longitude,
-                                                                line: routeData[vehicles[index]
-                                                                            .vehicle
-                                                                            .trip
-                                                                            .routeId
-                                                                            .toString()] ==
-                                                                        null
-                                                                    ? "line unknown"
-                                                                    : routeData[vehicles[index]
-                                                                            .vehicle
-                                                                            .trip
-                                                                            .routeId
-                                                                            .toString()]!["route_short_name"]
-                                                                        .toString(),
-                                                                vehicleId:
-                                                                    vehicles[
-                                                                            index]
-                                                                        .vehicle
-                                                                        .vehicle
-                                                                        .id,
-                                                                status: vehicles[
-                                                                        index]
-                                                                    .vehicle
-                                                                    .currentStatus
-                                                                    .toString(),
-                                                                route: routeData[vehicles[index]
-                                                                            .vehicle
-                                                                            .trip
-                                                                            .routeId
-                                                                            .toString()] ==
-                                                                        null
-                                                                    ? "route name unknown"
-                                                                    : routeData[vehicles[index]
-                                                                            .vehicle
-                                                                            .trip
-                                                                            .routeId
-                                                                            .toString()]!["route_long_name"]
-                                                                        .toString(),
-                                                              )));
+                                          if (showStations == false) {
+                                            setState(() {
+                                              showStations = true;
+                                            });
+                                          } else {
+                                            setState(() {
+                                              showStations = false;
+                                            });
+                                          }
                                         },
-                                        icon: const Icon(Icons.location_on)),
-                                    //route direction information & current status of movement
-                                    subtitle: Text(
-                                        "Status update on ${DateTime.fromMillisecondsSinceEpoch(vehicles[index].vehicle.timestamp.toInt() * 1000).toString()}"),
+                                        child: showStations == false
+                                            ? Text("Show Stop Information")
+                                            : Text("Hide Stop Information"),
+                                      ),
+                                      showStations == false
+                                          ? SizedBox()
+                                          : Container(
+                                              child: ListView.builder(
+                                                  shrinkWrap: true,
+                                                  physics:
+                                                      const AlwaysScrollableScrollPhysics(),
+                                                  itemCount: stops.length,
+                                                  itemBuilder:
+                                                      (BuildContext context,
+                                                          int index) {
+                                                    return ListTile(
+                                                      isThreeLine: true,
+                                                      title: Center(
+                                                        child: Text(stopData[
+                                                                    stops[index]
+                                                                        .stopId]![
+                                                                "stop_name"]
+                                                            .toString()),
+                                                      ),
+                                                      subtitle: Column(
+                                                        children: [
+                                                          Text(
+                                                              "Arrives at ${DateTime.fromMillisecondsSinceEpoch(stops[index].arrival.time.toInt() * 1000).toString()}"),
+                                                          Text(
+                                                              "Departs at ${DateTime.fromMillisecondsSinceEpoch(stops[index].departure.time.toInt() * 1000).toString()}")
+                                                        ],
+                                                      ),
+                                                    );
+                                                  })),
+                                    ],
                                   ),
                                 ),
                               )
