@@ -20,6 +20,7 @@ class _RTDFeedState extends State<RTDFeed> {
   late List<FeedEntity> vehicles = [];
   late GlobalKey<ScaffoldState> _scaffoldKey;
   late bool showStations;
+  late String stopSelected;
 
   final status = ["Incoming at", "Stopped at", "In transit to"];
 
@@ -108,6 +109,7 @@ class _RTDFeedState extends State<RTDFeed> {
     TripFeed();
     _scaffoldKey = GlobalKey();
     showStations = false;
+    stopSelected = "";
     super.initState();
   }
 
@@ -289,24 +291,35 @@ class _RTDFeedState extends State<RTDFeed> {
                                         ),
                                       ),
                                       OutlinedButton(
-                                        onPressed: () {
-                                          if (showStations == false) {
-                                            setState(() {
-                                              showStations = true;
-                                            });
-                                          } else {
-                                            setState(() {
-                                              showStations = false;
-                                            });
-                                          }
-                                        },
-                                        child: showStations == false
-                                            ? Text("Show Stop Information")
-                                            : Text("Hide Stop Information"),
-                                      ),
-                                      showStations == false
-                                          ? SizedBox()
-                                          : Container(
+                                          onPressed: () {
+                                            if (stopSelected == "") {
+                                              setState(() {
+                                                stopSelected = stopData[
+                                                            vehicles[index]
+                                                                .vehicle
+                                                                .stopId]![
+                                                        "stop_name"]
+                                                    .toString();
+                                              });
+                                            } else {
+                                              setState(() {
+                                                stopSelected = "";
+                                              });
+                                            }
+                                          },
+                                          child: stopSelected ==
+                                                  stopData[vehicles[index]
+                                                          .vehicle
+                                                          .stopId]!["stop_name"]
+                                                      .toString()
+                                              ? Text("Hide Stop Information")
+                                              : Text("Show Stop Information")),
+                                      stopSelected ==
+                                              stopData[vehicles[index]
+                                                      .vehicle
+                                                      .stopId]!["stop_name"]
+                                                  .toString()
+                                          ? Container(
                                               child: ListView.builder(
                                                   shrinkWrap: true,
                                                   physics:
@@ -333,7 +346,8 @@ class _RTDFeedState extends State<RTDFeed> {
                                                         ],
                                                       ),
                                                     );
-                                                  })),
+                                                  }))
+                                          : SizedBox(),
                                     ],
                                   ),
                                 ),
