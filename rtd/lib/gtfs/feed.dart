@@ -141,11 +141,21 @@ class _RTDFeedState extends State<RTDFeed> {
               itemCount: vehicles.length,
               itemBuilder: (BuildContext context, int index) {
                 List<TripUpdate_StopTimeUpdate> stops = [];
-                for (var i = 0;
-                    i <= trips[index].tripUpdate.stopTimeUpdate.length;
-                    i++) {
-                  stops = trips[index].tripUpdate.stopTimeUpdate.toList();
+                print(
+                    "vehicle tripid = ${vehicles[index].vehicle.trip.tripId}");
+                int tripIndex = trips.indexWhere((element) =>
+                    element.tripUpdate.trip.tripId ==
+                    vehicles[index].vehicle.trip.tripId);
+                if (tripIndex == -1) {
+                  print('no trip data');
+                } else {
+                  for (var i = 0;
+                      i <= trips[tripIndex].tripUpdate.stopTimeUpdate.length;
+                      i++) {
+                    stops = trips[tripIndex].tripUpdate.stopTimeUpdate.toList();
+                  }
                 }
+
                 //get route data of the selected train/bus
                 return routeData[
                             vehicles[index].vehicle.trip.routeId.toString()] ==
