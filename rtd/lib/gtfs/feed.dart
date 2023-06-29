@@ -18,8 +18,8 @@ class _RTDFeedState extends State<RTDFeed> {
   late List<FeedEntity> alerts = [];
   late List<FeedEntity> trips = [];
   late List<FeedEntity> vehicles = [];
+
   late GlobalKey<ScaffoldState> _scaffoldKey;
-  late bool showStations;
   late String stopSelected;
 
   final status = ["Incoming at", "Stopped at", "In transit to"];
@@ -37,7 +37,9 @@ class _RTDFeedState extends State<RTDFeed> {
 
       print('Number of Alerts: ${feedMessage.entity.length}.');
 
-      alerts = feedMessage.entity;
+      setState(() {
+        alerts = feedMessage.entity;
+      });
     } else {
       print('Request failed with status: ${response.statusCode}.');
     }
@@ -53,7 +55,9 @@ class _RTDFeedState extends State<RTDFeed> {
 
       print('Number of Trips Found: ${feedMessage.entity.length}.');
 
-      trips = feedMessage.entity;
+      setState(() {
+        trips = feedMessage.entity;
+      });
     } else {
       print('Request failed with status: ${response.statusCode}.');
     }
@@ -69,28 +73,53 @@ class _RTDFeedState extends State<RTDFeed> {
 
       print('Number of Vehicles Found: ${feedMessage.entity.length}.');
 
-      vehicles = feedMessage.entity;
+      setState(() {
+        vehicles = feedMessage.entity;
+      });
     } else {
       print('Request failed with status: ${response.statusCode}.');
     }
   }
 
-  Widget _buildPopupDialog(BuildContext context, index) {
-    List<TripUpdate_StopTimeUpdate> stops = [];
-    for (var i = 0; i <= trips[index].tripUpdate.stopTimeUpdate.length; i++) {
-      stops = trips[index].tripUpdate.stopTimeUpdate.toList();
-    }
-    print(stops);
+  Widget _buildPopupDialog(BuildContext context, list) {
+    List<FeedEntity> thisList = list;
 
     return AlertDialog(
       title: const Text('Service Alerts'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: const <Widget>[
-          Text('There are no service alerts at this time.')
-        ],
-      ),
+      content: list.length > 0
+          ? Container(
+              width: double.maxFinite,
+              child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: thisList.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    return ListTile(
+                      isThreeLine: true,
+                      title: Column(
+                        children: [
+                          Text(thisList[index]
+                              .alert
+                              .descriptionText
+                              .translation[0]
+                              .text
+                              .toString()),
+                          thisList[index].alert.activePeriod[0].start.toInt() >
+                                  0
+                              ? Text(
+                                  "Starting ${DateTime.fromMillisecondsSinceEpoch(thisList[index].alert.activePeriod[0].start.toInt() * 1000).toString()}")
+                              : SizedBox(),
+                        ],
+                      ),
+                      subtitle: Text(thisList[index]
+                          .alert
+                          .headerText
+                          .translation[0]
+                          .text
+                          .toString()),
+                    );
+                  }),
+            )
+          : Text('There are no service alerts at this time.'),
       actions: <Widget>[
         OutlinedButton(
           onPressed: () {
@@ -108,7 +137,6 @@ class _RTDFeedState extends State<RTDFeed> {
     VehicaleFeed();
     TripFeed();
     _scaffoldKey = GlobalKey();
-    showStations = false;
     stopSelected = "";
     super.initState();
   }
@@ -225,24 +253,20 @@ class _RTDFeedState extends State<RTDFeed> {
                                             leading: IconButton(
                                               onPressed: () {
                                                 //popup for station list here
-                                                showDialog(
-                                                  context: context,
-                                                  builder:
-                                                      (BuildContext context) =>
-                                                          _buildPopupDialog(
-                                                    context,
-                                                    trips.indexWhere(
-                                                        (element) =>
-                                                            element.tripUpdate
-                                                                .trip.tripId ==
-                                                            vehicles[index]
-                                                                .vehicle
-                                                                .trip
-                                                                .tripId),
-                                                  ),
-                                                );
+                                                // showDialog(
+                                                //   context: context,
+                                                //   builder:
+                                                //       (BuildContext context) =>
+                                                //           _buildPopupDialog(
+                                                //               context,
+                                                //               vehicles[index]
+                                                //                   .vehicle
+                                                //                   .trip
+                                                //                   .routeId),
+                                                // );
                                               },
-                                              icon: Icon(Icons.railway_alert),
+                                              icon:
+                                                  Icon(Icons.schedule_outlined),
                                             ),
                                             //descriptive name of the route
                                             title: Text(
@@ -322,14 +346,56 @@ class _RTDFeedState extends State<RTDFeed> {
                                           ? Container(
                                               child: ListView.builder(
                                                   shrinkWrap: true,
-                                                  physics:
-                                                      const AlwaysScrollableScrollPhysics(),
+                                                  // physics:
+                                                  //     const AlwaysScrollableScrollPhysics(),
                                                   itemCount: stops.length,
                                                   itemBuilder:
                                                       (BuildContext context,
                                                           int index) {
+                                                    List<FeedEntity>
+                                                        thisAlertsList = [];
+
+                                                    for (var i = 0;
+                                                        i <= alerts.length - 1;
+                                                        i++) {
+                                                      var informedEntities =
+                                                          alerts[i]
+                                                              .alert
+                                                              .informedEntity;
+                                                      for (var entity
+                                                          in informedEntities) {
+                                                        if (entity.stopId ==
+                                                            stops[index]
+                                                                .stopId) {
+                                                          thisAlertsList
+                                                              .add(alerts[i]);
+
+                                                          print(thisAlertsList
+                                                              .toString());
+                                                        }
+                                                      }
+                                                    }
+
                                                     return ListTile(
                                                       isThreeLine: true,
+                                                      leading: IconButton(
+                                                        onPressed: () {
+                                                          //popup for station list here
+                                                          showDialog(
+                                                              context: context,
+                                                              builder: (BuildContext
+                                                                      context) =>
+                                                                  _buildPopupDialog(
+                                                                      context,
+                                                                      thisAlertsList));
+                                                        },
+                                                        icon: thisAlertsList
+                                                                    .length >
+                                                                0
+                                                            ? Icon(Icons
+                                                                .railway_alert)
+                                                            : Icon(null),
+                                                      ),
                                                       title: Center(
                                                         child: Text(stopData[
                                                                     stops[index]
