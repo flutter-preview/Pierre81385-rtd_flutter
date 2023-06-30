@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gtfs_realtime_bindings/gtfs_realtime_bindings.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 import 'package:rtd/gtfs/map.dart';
 import '../data_sets/route_data.dart';
 import '../data_sets/stop_data.dart';
@@ -103,11 +104,23 @@ class _RTDFeedState extends State<RTDFeed> {
                               .translation[0]
                               .text
                               .toString()),
+                          const SizedBox(
+                            height: 10,
+                            width: 100,
+                          ),
                           thisList[index].alert.activePeriod[0].start.toInt() >
                                   0
                               ? Text(
-                                  "Starting ${DateTime.fromMillisecondsSinceEpoch(thisList[index].alert.activePeriod[0].start.toInt() * 1000).toString()}")
-                              : SizedBox(),
+                                  "Starting ${DateFormat.yMMMMd('en_US').format(DateTime.fromMillisecondsSinceEpoch(thisList[index].alert.activePeriod[0].start.toInt() * 1000))}")
+                              : const SizedBox(),
+                          const SizedBox(
+                            height: 10,
+                            width: 100,
+                          ),
+                          thisList[index].alert.activePeriod[0].end.toInt() > 0
+                              ? Text(
+                                  "Ending ${DateFormat.yMMMMd('en_US').format(DateTime.fromMillisecondsSinceEpoch(thisList[index].alert.activePeriod[0].end.toInt() * 1000))}")
+                              : const SizedBox(),
                         ],
                       ),
                       subtitle: Text(thisList[index]
@@ -119,7 +132,7 @@ class _RTDFeedState extends State<RTDFeed> {
                     );
                   }),
             )
-          : Text('There are no service alerts at this time.'),
+          : const Text('There are no service alerts at this time.'),
       actions: <Widget>[
         OutlinedButton(
           onPressed: () {
@@ -149,14 +162,9 @@ class _RTDFeedState extends State<RTDFeed> {
         child: RefreshIndicator(
           onRefresh: () {
             return Future.delayed(
-              Duration(seconds: 1),
+              const Duration(seconds: 1),
               () {
-                /// adding elements in list after [1 seconds] delay
-                /// to mimic network call
-                ///
-                /// Remember: [setState] is necessary so that
-                /// build method will run again otherwise
-                /// list will not show all elements
+                //refresh feed data and reload on state change
                 setState(() {
                   AlertFeed();
                   VehicaleFeed();
@@ -173,8 +181,7 @@ class _RTDFeedState extends State<RTDFeed> {
               itemCount: vehicles.length,
               itemBuilder: (BuildContext context, int index) {
                 List<TripUpdate_StopTimeUpdate> stops = [];
-                print(
-                    "vehicle tripid = ${vehicles[index].vehicle.trip.tripId}");
+
                 int tripIndex = trips.indexWhere((element) =>
                     element.tripUpdate.trip.tripId ==
                     vehicles[index].vehicle.trip.tripId);
@@ -252,25 +259,16 @@ class _RTDFeedState extends State<RTDFeed> {
                                             //name of the route selected
                                             leading: IconButton(
                                               onPressed: () {
-                                                //popup for station list here
-                                                // showDialog(
-                                                //   context: context,
-                                                //   builder:
-                                                //       (BuildContext context) =>
-                                                //           _buildPopupDialog(
-                                                //               context,
-                                                //               vehicles[index]
-                                                //                   .vehicle
-                                                //                   .trip
-                                                //                   .routeId),
-                                                // );
+                                                //popup for schedule list here
                                               },
-                                              icon:
-                                                  Icon(Icons.schedule_outlined),
+                                              icon: const Icon(
+                                                  Icons.schedule_outlined),
                                             ),
                                             //descriptive name of the route
                                             title: Text(
-                                                "${routeData[vehicles[index].vehicle.trip.routeId.toString()]!["route_short_name"].toString()} Line heading to ${tripData[vehicles[index].vehicle.trip.routeId.toString()]?["trip_headsign"].toString()} ${status[vehicles[index].vehicle.currentStatus.value].toUpperCase()} ${stopData[vehicles[index].vehicle.stopId]!["stop_name"]}"),
+                                                // "${routeData[vehicles[index].vehicle.trip.routeId.toString()]!["route_short_name"].toString()} Line heading to ${tripData[tripData.indexWhere((element) => element["trip_id"] == vehicles[index].vehicle.trip.tripId)]["trip_headsign"].toString()} ${status[vehicles[index].vehicle.currentStatus.value].toUpperCase()} ${stopData[vehicles[index].vehicle.stopId]!["stop_name"]}"),
+
+                                                "${tripData[tripData.indexWhere((element) => element["trip_id"] == vehicles[index].vehicle.trip.tripId)]["trip_headsign"].toString()} ${status[vehicles[index].vehicle.currentStatus.value].toUpperCase()} ${stopData[vehicles[index].vehicle.stopId]!["stop_name"]}"),
                                             //the current location of the selected train/bus
                                             trailing: IconButton(
                                                 onPressed: () {
@@ -310,7 +308,7 @@ class _RTDFeedState extends State<RTDFeed> {
                                                     Icons.place_outlined)),
                                             //route direction information & current status of movement
                                             subtitle: Text(
-                                                "Status update on ${DateTime.fromMillisecondsSinceEpoch(vehicles[index].vehicle.timestamp.toInt() * 1000).toString()}"),
+                                                "Status update on ${DateFormat.yMMMMd('en_US').add_jm().format(DateTime.fromMillisecondsSinceEpoch(vehicles[index].vehicle.timestamp.toInt() * 1000))}"),
                                           ),
                                         ),
                                       ),
@@ -318,12 +316,21 @@ class _RTDFeedState extends State<RTDFeed> {
                                           onPressed: () {
                                             if (stopSelected == "") {
                                               setState(() {
-                                                stopSelected = stopData[
-                                                            vehicles[index]
-                                                                .vehicle
-                                                                .stopId]![
-                                                        "stop_name"]
-                                                    .toString();
+                                                if (stopData[vehicles[index]
+                                                        .vehicle
+                                                        .stopId]!
+                                                    .isEmpty) {
+                                                  setState(() {
+                                                    stopSelected = "empty";
+                                                  });
+                                                } else {
+                                                  stopSelected = stopData[
+                                                              vehicles[index]
+                                                                  .vehicle
+                                                                  .stopId]![
+                                                          "stop_name"]
+                                                      .toString();
+                                                }
                                               });
                                             } else {
                                               setState(() {
@@ -336,8 +343,10 @@ class _RTDFeedState extends State<RTDFeed> {
                                                           .vehicle
                                                           .stopId]!["stop_name"]
                                                       .toString()
-                                              ? Text("Hide Stop Information")
-                                              : Text("Show Stop Information")),
+                                              ? const Text(
+                                                  "Hide Stop Information")
+                                              : const Text(
+                                                  "Show Stop Information")),
                                       stopSelected ==
                                               stopData[vehicles[index]
                                                       .vehicle
@@ -390,11 +399,26 @@ class _RTDFeedState extends State<RTDFeed> {
                                                                       thisAlertsList));
                                                         },
                                                         icon: thisAlertsList
-                                                                    .length >
-                                                                0
-                                                            ? Icon(Icons
-                                                                .railway_alert)
-                                                            : Icon(null),
+                                                                .isNotEmpty
+                                                            ? const Icon(
+                                                                Icons
+                                                                    .railway_alert,
+                                                                color:
+                                                                    Colors.red,
+                                                                shadows: <
+                                                                    Shadow>[
+                                                                  Shadow(
+                                                                      color: Colors
+                                                                          .black45,
+                                                                      blurRadius:
+                                                                          20.0,
+                                                                      offset:
+                                                                          Offset(
+                                                                              0,
+                                                                              2.0))
+                                                                ],
+                                                              )
+                                                            : const Icon(null),
                                                       ),
                                                       title: Center(
                                                         child: Text(stopData[
@@ -406,14 +430,16 @@ class _RTDFeedState extends State<RTDFeed> {
                                                       subtitle: Column(
                                                         children: [
                                                           Text(
-                                                              "Arrives at ${DateTime.fromMillisecondsSinceEpoch(stops[index].arrival.time.toInt() * 1000).toString()}"),
+                                                              "Arrives at ${DateFormat.yMMMMd('en_US').add_jm().format(DateTime.fromMillisecondsSinceEpoch(stops[index].arrival.time.toInt() * 1000))}"),
                                                           Text(
-                                                              "Departs at ${DateTime.fromMillisecondsSinceEpoch(stops[index].departure.time.toInt() * 1000).toString()}")
+                                                              "Departs at ${DateFormat.yMMMMd('en_US').add_jm().format(DateTime.fromMillisecondsSinceEpoch(stops[index].departure.time.toInt() * 1000))}")
                                                         ],
                                                       ),
+                                                      trailing: const Icon(Icons
+                                                          .info_outline_rounded),
                                                     );
                                                   }))
-                                          : SizedBox(),
+                                          : const SizedBox(),
                                     ],
                                   ),
                                 ),
