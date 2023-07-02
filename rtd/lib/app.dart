@@ -23,25 +23,28 @@ class _RTDAppState extends State<RTDApp> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Where\'s my train?'),
-      ),
+      // appBar: AppBar(
+      //   title: const Text('Where\'s my train?'),
+      // ),
       body: SafeArea(
         child: Column(
           children: [
-            Row(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Center(
-                    child: VehicleSelection(onChange: (value) {
-                      setState(() {
-                        _vehicleSelected = value;
-                      });
-                    }),
-                  ),
-                )
-              ],
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Center(
+                      child: VehicleSelection(onChange: (value) {
+                        setState(() {
+                          _vehicleSelected = value;
+                        });
+                      }),
+                    ),
+                  )
+                ],
+              ),
             ),
             Expanded(
                 child: RTDFeed(

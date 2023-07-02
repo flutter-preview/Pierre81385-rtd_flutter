@@ -1,4 +1,4 @@
-{
+const shapeData = {
   "1241111": {
     "shape_pt_lat": 39.754224,
     "shape_pt_lon": -105.001275,
@@ -2915,4 +2915,4 @@
     "shape_pt_sequence": 1902,
     "shape_dist_traveled": ""
   }
-}
+};

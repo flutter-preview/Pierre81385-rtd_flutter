@@ -6,6 +6,7 @@ import 'package:rtd/gtfs/map.dart';
 import '../data_sets/route_data.dart';
 import '../data_sets/stop_data.dart';
 import '../data_sets/trip_data.dart';
+import '../data_sets/shape_data.dart';
 
 class RTDFeed extends StatefulWidget {
   const RTDFeed({required this.vehicle, super.key});
@@ -22,6 +23,7 @@ class _RTDFeedState extends State<RTDFeed> {
 
   late GlobalKey<ScaffoldState> _scaffoldKey;
   late String stopSelected;
+  late bool stopScroll;
 
   final status = ["Incoming at", "Stopped at", "In transit to"];
 
@@ -151,6 +153,7 @@ class _RTDFeedState extends State<RTDFeed> {
     TripFeed();
     _scaffoldKey = GlobalKey();
     stopSelected = "";
+    stopScroll = false;
     super.initState();
   }
 
@@ -170,6 +173,7 @@ class _RTDFeedState extends State<RTDFeed> {
                   VehicaleFeed();
                   TripFeed();
                 });
+                print("updating real time feed data!");
 
                 // showing snackbar
                 ScaffoldMessenger.of(context).showSnackBar(snack);
@@ -177,11 +181,13 @@ class _RTDFeedState extends State<RTDFeed> {
             );
           },
           child: ListView.builder(
-              physics: const AlwaysScrollableScrollPhysics(),
+              physics: stopScroll == false
+                  ? const AlwaysScrollableScrollPhysics()
+                  : const NeverScrollableScrollPhysics(),
               itemCount: vehicles.length,
               itemBuilder: (BuildContext context, int index) {
                 List<TripUpdate_StopTimeUpdate> stops = [];
-
+                //finding all trips in tripUpdate RT FEED that match selected vehicle tripId
                 int tripIndex = trips.indexWhere((element) =>
                     element.tripUpdate.trip.tripId ==
                     vehicles[index].vehicle.trip.tripId);
@@ -191,9 +197,19 @@ class _RTDFeedState extends State<RTDFeed> {
                   for (var i = 0;
                       i <= trips[tripIndex].tripUpdate.stopTimeUpdate.length;
                       i++) {
+                    //listing all of the stops remaining for this tripId
                     stops = trips[tripIndex].tripUpdate.stopTimeUpdate.toList();
                   }
                 }
+
+                //tripData EXAMPLE
+                //"route_id": "326",
+                // "service_id": "SA",
+                // "trip_id": "114454825",
+                // "trip_headsign": "Park Ridge 326 Main 326 FREE",
+                // "direction_id": "0",
+                // "block_id": " 326  1",
+                // "shape_id": "1241717"
 
                 //get route data of the selected train/bus
                 return routeData[
@@ -268,7 +284,7 @@ class _RTDFeedState extends State<RTDFeed> {
                                             title: Text(
                                                 // "${routeData[vehicles[index].vehicle.trip.routeId.toString()]!["route_short_name"].toString()} Line heading to ${tripData[tripData.indexWhere((element) => element["trip_id"] == vehicles[index].vehicle.trip.tripId)]["trip_headsign"].toString()} ${status[vehicles[index].vehicle.currentStatus.value].toUpperCase()} ${stopData[vehicles[index].vehicle.stopId]!["stop_name"]}"),
 
-                                                "${tripData[tripData.indexWhere((element) => element["trip_id"] == vehicles[index].vehicle.trip.tripId)]["trip_headsign"].toString()} ${status[vehicles[index].vehicle.currentStatus.value].toUpperCase()} ${stopData[vehicles[index].vehicle.stopId]!["stop_name"]}"),
+                                                "${tripData[tripData.indexWhere((element) => element["trip_id"] == vehicles[index].vehicle.trip.tripId)]["trip_headsign"].toString()} ${status[vehicles[index].vehicle.currentStatus.value].toString()} ${stopData[vehicles[index].vehicle.stopId]!["stop_name"]}"),
                                             //the current location of the selected train/bus
                                             trailing: IconButton(
                                                 onPressed: () {
@@ -278,6 +294,10 @@ class _RTDFeedState extends State<RTDFeed> {
                                                               builder:
                                                                   (context) =>
                                                                       MapView(
+                                                                        trip: vehicles[index]
+                                                                            .vehicle
+                                                                            .trip
+                                                                            .routeId,
                                                                         lat: vehicles[index]
                                                                             .vehicle
                                                                             .position
@@ -355,8 +375,8 @@ class _RTDFeedState extends State<RTDFeed> {
                                           ? Container(
                                               child: ListView.builder(
                                                   shrinkWrap: true,
-                                                  // physics:
-                                                  //     const AlwaysScrollableScrollPhysics(),
+                                                  physics:
+                                                      const AlwaysScrollableScrollPhysics(),
                                                   itemCount: stops.length,
                                                   itemBuilder:
                                                       (BuildContext context,
@@ -405,8 +425,7 @@ class _RTDFeedState extends State<RTDFeed> {
                                                                     .railway_alert,
                                                                 color:
                                                                     Colors.red,
-                                                                shadows: <
-                                                                    Shadow>[
+                                                                shadows: <Shadow>[
                                                                   Shadow(
                                                                       color: Colors
                                                                           .black45,
