@@ -84,6 +84,24 @@ class _RTDFeedState extends State<RTDFeed> {
     }
   }
 
+  Color hexToArgbColor(String hexColor) {
+    // Remove the '#' character if present
+    if (hexColor.startsWith('#')) {
+      hexColor = hexColor.substring(1);
+    }
+
+    // Pad the hexadecimal color code if it's a short form
+    if (hexColor.length == 6) {
+      hexColor = 'FF$hexColor';
+    }
+
+    // Parse the hexadecimal color code
+    int colorValue = int.parse(hexColor, radix: 16);
+
+    // Return the ARGB color
+    return Color(colorValue);
+  }
+
   Widget _buildPopupDialog(BuildContext context, list) {
     List<FeedEntity> thisList = list;
 
@@ -161,309 +179,305 @@ class _RTDFeedState extends State<RTDFeed> {
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
-      body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: () {
-            return Future.delayed(
-              const Duration(seconds: 1),
-              () {
-                //refresh feed data and reload on state change
-                setState(() {
-                  AlertFeed();
-                  VehicaleFeed();
-                  TripFeed();
-                });
-                print("updating real time feed data!");
+      body: RefreshIndicator(
+        onRefresh: () {
+          return Future.delayed(
+            const Duration(seconds: 1),
+            () {
+              //refresh feed data and reload on state change
+              setState(() {
+                AlertFeed();
+                VehicaleFeed();
+                TripFeed();
+              });
+              print("updating real time feed data!");
 
-                // showing snackbar
-                ScaffoldMessenger.of(context).showSnackBar(snack);
-              },
-            );
-          },
-          child: ListView.builder(
-              physics: stopScroll == false
-                  ? const AlwaysScrollableScrollPhysics()
-                  : const NeverScrollableScrollPhysics(),
-              itemCount: vehicles.length,
-              itemBuilder: (BuildContext context, int index) {
-                List<TripUpdate_StopTimeUpdate> stops = [];
-                //finding all trips in tripUpdate RT FEED that match selected vehicle tripId
-                int tripIndex = trips.indexWhere((element) =>
-                    element.tripUpdate.trip.tripId ==
-                    vehicles[index].vehicle.trip.tripId);
-                if (tripIndex == -1) {
-                  print('no trip data');
-                } else {
-                  for (var i = 0;
-                      i <= trips[tripIndex].tripUpdate.stopTimeUpdate.length;
-                      i++) {
-                    //listing all of the stops remaining for this tripId
-                    stops = trips[tripIndex].tripUpdate.stopTimeUpdate.toList();
-                  }
+              // showing snackbar
+              ScaffoldMessenger.of(context).showSnackBar(snack);
+            },
+          );
+        },
+        child: ListView.builder(
+            physics: stopScroll == false
+                ? const AlwaysScrollableScrollPhysics()
+                : const NeverScrollableScrollPhysics(),
+            itemCount: vehicles.length,
+            itemBuilder: (BuildContext context, int index) {
+              List<TripUpdate_StopTimeUpdate> stops = [];
+              //finding all trips in tripUpdate RT FEED that match selected vehicle tripId
+              int tripIndex = trips.indexWhere((element) =>
+                  element.tripUpdate.trip.tripId ==
+                  vehicles[index].vehicle.trip.tripId);
+              if (tripIndex == -1) {
+                print('no trip data');
+              } else {
+                for (var i = 0;
+                    i <= trips[tripIndex].tripUpdate.stopTimeUpdate.length;
+                    i++) {
+                  //listing all of the stops remaining for this tripId
+                  stops = trips[tripIndex].tripUpdate.stopTimeUpdate.toList();
                 }
+              }
 
-                //tripData EXAMPLE
-                //"route_id": "326",
-                // "service_id": "SA",
-                // "trip_id": "114454825",
-                // "trip_headsign": "Park Ridge 326 Main 326 FREE",
-                // "direction_id": "0",
-                // "block_id": " 326  1",
-                // "shape_id": "1241717"
-
-                //get route data of the selected train/bus
-                return routeData[
-                            vehicles[index].vehicle.trip.routeId.toString()] ==
-                        null
-                    ? const SizedBox()
-                    : widget.vehicle == "select"
-                        ? const SizedBox()
-                        : routeData[vehicles[index]
-                                        .vehicle
-                                        .trip
-                                        .routeId
-                                        .toString()]!["route_short_name"]
-                                    .toString() ==
-                                widget.vehicle
-                            ? Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: const BorderRadius.only(
-                                        topLeft: Radius.circular(10),
-                                        topRight: Radius.circular(10),
-                                        bottomLeft: Radius.circular(10),
-                                        bottomRight: Radius.circular(10)),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.grey.withOpacity(0.5),
-                                        spreadRadius: 5,
-                                        blurRadius: 7,
-                                        offset: const Offset(
-                                            0, 3), // changes position of shadow
-                                      ),
-                                    ],
-                                  ),
-                                  child: Column(
-                                    children: [
-                                      Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            borderRadius: const BorderRadius
-                                                    .only(
-                                                topLeft: Radius.circular(10),
-                                                topRight: Radius.circular(10),
-                                                bottomLeft: Radius.circular(10),
-                                                bottomRight:
-                                                    Radius.circular(10)),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.grey
-                                                    .withOpacity(0.5),
-                                                spreadRadius: 5,
-                                                blurRadius: 7,
-                                                offset: const Offset(0,
-                                                    3), // changes position of shadow
-                                              ),
-                                            ],
+              //get route data of the selected train/bus
+              return routeData[
+                          vehicles[index].vehicle.trip.routeId.toString()] ==
+                      null
+                  ? const SizedBox()
+                  : widget.vehicle == "select"
+                      ? const SizedBox()
+                      : routeData[vehicles[index]
+                                      .vehicle
+                                      .trip
+                                      .routeId
+                                      .toString()]!["route_short_name"]
+                                  .toString() ==
+                              widget.vehicle
+                          ? Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: const BorderRadius.only(
+                                      topLeft: Radius.circular(10),
+                                      topRight: Radius.circular(10),
+                                      bottomLeft: Radius.circular(10),
+                                      bottomRight: Radius.circular(10)),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.grey.withOpacity(0.5),
+                                      spreadRadius: 5,
+                                      blurRadius: 7,
+                                      offset: const Offset(
+                                          0, 3), // changes position of shadow
+                                    ),
+                                  ],
+                                ),
+                                child: Column(
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          color: hexToArgbColor(routeData[
+                                                          vehicles[index]
+                                                              .vehicle
+                                                              .trip
+                                                              .routeId
+                                                              .toString()]![
+                                                      "route_color"]
+                                                  .toString())
+                                              .withOpacity(1.0),
+                                          borderRadius: const BorderRadius.only(
+                                              topLeft: Radius.circular(10),
+                                              topRight: Radius.circular(10),
+                                              bottomLeft: Radius.circular(10),
+                                              bottomRight: Radius.circular(10)),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color:
+                                                  Colors.grey.withOpacity(0.5),
+                                              spreadRadius: 5,
+                                              blurRadius: 7,
+                                              offset: const Offset(0,
+                                                  3), // changes position of shadow
+                                            ),
+                                          ],
+                                        ),
+                                        child: ListTile(
+                                          isThreeLine: true,
+                                          //name of the route selected
+                                          leading: IconButton(
+                                            onPressed: () {
+                                              //popup for schedule list here
+                                            },
+                                            icon: const Icon(
+                                              Icons.schedule_outlined,
+                                              color: Colors.white,
+                                            ),
                                           ),
-                                          child: ListTile(
-                                            isThreeLine: true,
-                                            //name of the route selected
-                                            leading: IconButton(
+                                          //descriptive name of the route
+                                          title: Text(
+                                              // "${routeData[vehicles[index].vehicle.trip.routeId.toString()]!["route_short_name"].toString()} Line heading to ${tripData[tripData.indexWhere((element) => element["trip_id"] == vehicles[index].vehicle.trip.tripId)]["trip_headsign"].toString()} ${status[vehicles[index].vehicle.currentStatus.value].toUpperCase()} ${stopData[vehicles[index].vehicle.stopId]!["stop_name"]}"),
+                                              style: TextStyle(
+                                                  color: Colors.white),
+                                              "${tripData[tripData.indexWhere((element) => element["trip_id"] == vehicles[index].vehicle.trip.tripId)]["trip_headsign"].toString()} ${status[vehicles[index].vehicle.currentStatus.value].toString()} ${stopData[vehicles[index].vehicle.stopId]!["stop_name"]}"),
+                                          //the current location of the selected train/bus
+                                          trailing: IconButton(
+                                              color: Colors.white,
                                               onPressed: () {
-                                                //popup for schedule list here
+                                                Navigator.of(context).pushReplacement(MaterialPageRoute(
+                                                    builder: (context) => MapView(
+                                                        stops: stops,
+                                                        lat: vehicles[index]
+                                                            .vehicle
+                                                            .position
+                                                            .latitude,
+                                                        long: vehicles[index]
+                                                            .vehicle
+                                                            .position
+                                                            .longitude,
+                                                        line: routeData[vehicles[index].vehicle.trip.routeId.toString()] == null
+                                                            ? "line unknown"
+                                                            : routeData[vehicles[index].vehicle.trip.routeId.toString()]![
+                                                                    "route_short_name"]
+                                                                .toString(),
+                                                        vehicleId:
+                                                            vehicles[index]
+                                                                .vehicle
+                                                                .vehicle
+                                                                .id,
+                                                        status: vehicles[index]
+                                                            .vehicle
+                                                            .currentStatus
+                                                            .toString(),
+                                                        route: vehicles[index]
+                                                            .vehicle
+                                                            .trip
+                                                            .routeId
+                                                            .toString())));
                                               },
                                               icon: const Icon(
-                                                  Icons.schedule_outlined),
-                                            ),
-                                            //descriptive name of the route
-                                            title: Text(
-                                                // "${routeData[vehicles[index].vehicle.trip.routeId.toString()]!["route_short_name"].toString()} Line heading to ${tripData[tripData.indexWhere((element) => element["trip_id"] == vehicles[index].vehicle.trip.tripId)]["trip_headsign"].toString()} ${status[vehicles[index].vehicle.currentStatus.value].toUpperCase()} ${stopData[vehicles[index].vehicle.stopId]!["stop_name"]}"),
-
-                                                "${tripData[tripData.indexWhere((element) => element["trip_id"] == vehicles[index].vehicle.trip.tripId)]["trip_headsign"].toString()} ${status[vehicles[index].vehicle.currentStatus.value].toString()} ${stopData[vehicles[index].vehicle.stopId]!["stop_name"]}"),
-                                            //the current location of the selected train/bus
-                                            trailing: IconButton(
-                                                onPressed: () {
-                                                  Navigator.of(context)
-                                                      .pushReplacement(
-                                                          MaterialPageRoute(
-                                                              builder:
-                                                                  (context) =>
-                                                                      MapView(
-                                                                        stops:
-                                                                            stops,
-                                                                        lat: vehicles[index]
-                                                                            .vehicle
-                                                                            .position
-                                                                            .latitude,
-                                                                        long: vehicles[index]
-                                                                            .vehicle
-                                                                            .position
-                                                                            .longitude,
-                                                                        line: routeData[vehicles[index].vehicle.trip.routeId.toString()] ==
-                                                                                null
-                                                                            ? "line unknown"
-                                                                            : routeData[vehicles[index].vehicle.trip.routeId.toString()]!["route_short_name"].toString(),
-                                                                        vehicleId: vehicles[index]
-                                                                            .vehicle
-                                                                            .vehicle
-                                                                            .id,
-                                                                        status: vehicles[index]
-                                                                            .vehicle
-                                                                            .currentStatus
-                                                                            .toString(),
-                                                                        route: routeData[vehicles[index].vehicle.trip.routeId.toString()] ==
-                                                                                null
-                                                                            ? "route name unknown"
-                                                                            : routeData[vehicles[index].vehicle.trip.routeId.toString()]!["route_long_name"].toString(),
-                                                                      )));
-                                                },
-                                                icon: const Icon(
-                                                    Icons.place_outlined)),
-                                            //route direction information & current status of movement
-                                            subtitle: Text(
-                                                "Status update on ${DateFormat.yMMMMd('en_US').add_jm().format(DateTime.fromMillisecondsSinceEpoch(vehicles[index].vehicle.timestamp.toInt() * 1000))}"),
-                                          ),
+                                                  Icons.place_outlined)),
+                                          //route direction information & current status of movement
+                                          subtitle: Text(
+                                              style: TextStyle(
+                                                  color: Colors.white),
+                                              "Status update on ${DateFormat.yMMMMd('en_US').add_jm().format(DateTime.fromMillisecondsSinceEpoch(vehicles[index].vehicle.timestamp.toInt() * 1000))}"),
                                         ),
                                       ),
-                                      OutlinedButton(
-                                          onPressed: () {
-                                            if (stopSelected == "") {
-                                              setState(() {
-                                                if (stopData[vehicles[index]
-                                                        .vehicle
-                                                        .stopId]!
-                                                    .isEmpty) {
-                                                  setState(() {
-                                                    stopSelected = "empty";
-                                                  });
-                                                } else {
-                                                  stopSelected = stopData[
-                                                              vehicles[index]
-                                                                  .vehicle
-                                                                  .stopId]![
-                                                          "stop_name"]
-                                                      .toString();
-                                                }
-                                              });
-                                            } else {
-                                              setState(() {
-                                                stopSelected = "";
-                                              });
-                                            }
-                                          },
-                                          child: stopSelected ==
-                                                  stopData[vehicles[index]
-                                                          .vehicle
-                                                          .stopId]!["stop_name"]
-                                                      .toString()
-                                              ? const Text(
-                                                  "Hide Stop Information")
-                                              : const Text(
-                                                  "Show Stop Information")),
-                                      stopSelected ==
-                                              stopData[vehicles[index]
+                                    ),
+                                    OutlinedButton(
+                                        onPressed: () {
+                                          if (stopSelected == "") {
+                                            setState(() {
+                                              if (stopData[vehicles[index]
                                                       .vehicle
-                                                      .stopId]!["stop_name"]
-                                                  .toString()
-                                          ? Container(
-                                              child: ListView.builder(
-                                                  shrinkWrap: true,
-                                                  physics:
-                                                      const AlwaysScrollableScrollPhysics(),
-                                                  itemCount: stops.length,
-                                                  itemBuilder:
-                                                      (BuildContext context,
-                                                          int index) {
-                                                    List<FeedEntity>
-                                                        thisAlertsList = [];
+                                                      .stopId]!
+                                                  .isEmpty) {
+                                                setState(() {
+                                                  stopSelected = "empty";
+                                                });
+                                              } else {
+                                                stopSelected = stopData[
+                                                            vehicles[index]
+                                                                .vehicle
+                                                                .stopId]![
+                                                        "stop_name"]
+                                                    .toString();
+                                              }
+                                            });
+                                          } else {
+                                            setState(() {
+                                              stopSelected = "";
+                                            });
+                                          }
+                                        },
+                                        child: stopSelected ==
+                                                stopData[vehicles[index]
+                                                        .vehicle
+                                                        .stopId]!["stop_name"]
+                                                    .toString()
+                                            ? const Text(
+                                                "Hide Stop Information")
+                                            : const Text(
+                                                "Show Stop Information")),
+                                    stopSelected ==
+                                            stopData[vehicles[index]
+                                                    .vehicle
+                                                    .stopId]!["stop_name"]
+                                                .toString()
+                                        ? Container(
+                                            child: ListView.builder(
+                                                shrinkWrap: true,
+                                                physics:
+                                                    const AlwaysScrollableScrollPhysics(),
+                                                itemCount: stops.length,
+                                                itemBuilder:
+                                                    (BuildContext context,
+                                                        int index) {
+                                                  List<FeedEntity>
+                                                      thisAlertsList = [];
 
-                                                    for (var i = 0;
-                                                        i <= alerts.length - 1;
-                                                        i++) {
-                                                      var informedEntities =
-                                                          alerts[i]
-                                                              .alert
-                                                              .informedEntity;
-                                                      for (var entity
-                                                          in informedEntities) {
-                                                        if (entity.stopId ==
-                                                            stops[index]
-                                                                .stopId) {
-                                                          thisAlertsList
-                                                              .add(alerts[i]);
+                                                  for (var i = 0;
+                                                      i <= alerts.length - 1;
+                                                      i++) {
+                                                    var informedEntities =
+                                                        alerts[i]
+                                                            .alert
+                                                            .informedEntity;
+                                                    for (var entity
+                                                        in informedEntities) {
+                                                      if (entity.stopId ==
+                                                          stops[index].stopId) {
+                                                        thisAlertsList
+                                                            .add(alerts[i]);
 
-                                                          print(thisAlertsList
-                                                              .toString());
-                                                        }
+                                                        print(thisAlertsList
+                                                            .toString());
                                                       }
                                                     }
+                                                  }
 
-                                                    return ListTile(
-                                                      isThreeLine: true,
-                                                      leading: IconButton(
-                                                        onPressed: () {
-                                                          //popup for station list here
-                                                          showDialog(
-                                                              context: context,
-                                                              builder: (BuildContext
-                                                                      context) =>
-                                                                  _buildPopupDialog(
-                                                                      context,
-                                                                      thisAlertsList));
-                                                        },
-                                                        icon: thisAlertsList
-                                                                .isNotEmpty
-                                                            ? const Icon(
-                                                                Icons
-                                                                    .railway_alert,
-                                                                color:
-                                                                    Colors.red,
-                                                                shadows: <Shadow>[
-                                                                  Shadow(
-                                                                      color: Colors
-                                                                          .black45,
-                                                                      blurRadius:
-                                                                          20.0,
-                                                                      offset:
-                                                                          Offset(
-                                                                              0,
-                                                                              2.0))
-                                                                ],
-                                                              )
-                                                            : const Icon(null),
-                                                      ),
-                                                      title: Center(
-                                                        child: Text(stopData[
-                                                                    stops[index]
-                                                                        .stopId]![
-                                                                "stop_name"]
-                                                            .toString()),
-                                                      ),
-                                                      subtitle: Column(
-                                                        children: [
-                                                          Text(
-                                                              "Arrives at ${DateFormat.yMMMMd('en_US').add_jm().format(DateTime.fromMillisecondsSinceEpoch(stops[index].arrival.time.toInt() * 1000))}"),
-                                                          Text(
-                                                              "Departs at ${DateFormat.yMMMMd('en_US').add_jm().format(DateTime.fromMillisecondsSinceEpoch(stops[index].departure.time.toInt() * 1000))}")
-                                                        ],
-                                                      ),
-                                                      trailing: const Icon(Icons
-                                                          .info_outline_rounded),
-                                                    );
-                                                  }))
-                                          : const SizedBox(),
-                                    ],
-                                  ),
+                                                  return ListTile(
+                                                    isThreeLine: true,
+                                                    leading: IconButton(
+                                                      onPressed: () {
+                                                        //popup for station list here
+                                                        showDialog(
+                                                            context: context,
+                                                            builder: (BuildContext
+                                                                    context) =>
+                                                                _buildPopupDialog(
+                                                                    context,
+                                                                    thisAlertsList));
+                                                      },
+                                                      icon: thisAlertsList
+                                                              .isNotEmpty
+                                                          ? const Icon(
+                                                              Icons
+                                                                  .railway_alert,
+                                                              color: Colors.red,
+                                                              shadows: <Shadow>[
+                                                                Shadow(
+                                                                    color: Colors
+                                                                        .black45,
+                                                                    blurRadius:
+                                                                        20.0,
+                                                                    offset:
+                                                                        Offset(
+                                                                            0,
+                                                                            2.0))
+                                                              ],
+                                                            )
+                                                          : const Icon(null),
+                                                    ),
+                                                    title: Center(
+                                                      child: Text(stopData[
+                                                                  stops[index]
+                                                                      .stopId]![
+                                                              "stop_name"]
+                                                          .toString()),
+                                                    ),
+                                                    subtitle: Column(
+                                                      children: [
+                                                        Text(
+                                                            "Arrives at ${DateFormat.yMMMMd('en_US').add_jm().format(DateTime.fromMillisecondsSinceEpoch(stops[index].arrival.time.toInt() * 1000))}"),
+                                                        Text(
+                                                            "Departs at ${DateFormat.yMMMMd('en_US').add_jm().format(DateTime.fromMillisecondsSinceEpoch(stops[index].departure.time.toInt() * 1000))}")
+                                                      ],
+                                                    ),
+                                                    trailing: const Icon(Icons
+                                                        .info_outline_rounded),
+                                                  );
+                                                }))
+                                        : const SizedBox(),
+                                  ],
                                 ),
-                              )
-                            : const SizedBox();
-              }),
-        ),
+                              ),
+                            )
+                          : const SizedBox();
+            }),
       ),
     );
   }

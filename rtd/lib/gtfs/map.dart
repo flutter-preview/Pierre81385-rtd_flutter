@@ -1,5 +1,6 @@
 import 'dart:collection';
 import 'package:gtfs_realtime_bindings/gtfs_realtime_bindings.dart';
+import 'package:rtd/data_sets/route_data.dart';
 import 'package:rtd/data_sets/shape_data.dart';
 import 'package:rtd/data_sets/stop_data.dart';
 
@@ -52,6 +53,24 @@ class _MapViewState extends State<MapView> {
     );
   }
 
+  Color hexToArgbColor(String hexColor) {
+    // Remove the '#' character if present
+    if (hexColor.startsWith('#')) {
+      hexColor = hexColor.substring(1);
+    }
+
+    // Pad the hexadecimal color code if it's a short form
+    if (hexColor.length == 6) {
+      hexColor = 'FF$hexColor';
+    }
+
+    // Parse the hexadecimal color code
+    int colorValue = int.parse(hexColor, radix: 16);
+
+    // Return the ARGB color
+    return Color(colorValue);
+  }
+
   void getPoints() {
     for (var i = 0; i < widget.stops.length; i++) {
       setState(() {
@@ -82,16 +101,10 @@ class _MapViewState extends State<MapView> {
                   stopData[widget.stops[i + 1].stopId]!["stop_lon"]
                       as double), //end point
             ],
-            color: Colors.deepPurpleAccent, //color of polyline
+            color: hexToArgbColor(routeData[widget.route]!["route_color"]
+                .toString()), //color of polyline
           ));
         }
-
-        // points.add({
-        //   LatLng(stopData[widget.stops[i].stopId]!["stop_lat"] as double,
-        //       stopData[widget.stops[i].stopId]!["stop_lon"] as double),
-        //   LatLng(stopData[widget.stops[i + 1].stopId]!["stop_lat"] as double,
-        //       stopData[widget.stops[i + 1].stopId]!["stop_lon"] as double)
-        // });
       });
     }
   }
@@ -104,7 +117,9 @@ class _MapViewState extends State<MapView> {
           position: LatLng(widget.lat, widget.long),
           infoWindow: InfoWindow(
             title: "The " + widget.line + " line",
-            snippet: widget.status + " " + widget.route,
+            snippet: widget.status +
+                " " +
+                stopData[widget.stops[0].stopId]!["stop_name"].toString(),
           ),
           icon: markerIcon);
 
@@ -121,14 +136,6 @@ class _MapViewState extends State<MapView> {
     _kMapCenter = LatLng(widget.lat, widget.long);
     _kInitialPosition =
         CameraPosition(target: _kMapCenter, zoom: 10.0, tilt: 0, bearing: 0);
-    // _Polyline.add(Polyline(
-    //     polylineId: PolylineId('1'),
-    //     points: points,
-    //     color: Colors.green,
-    //     geodesic: true,
-    //     width: 4,
-    //     startCap: Cap.buttCap,
-    //     endCap: Cap.buttCap));
   }
 
   @override

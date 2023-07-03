@@ -31,19 +31,12 @@ class _RTDAppState extends State<RTDApp> {
           children: [
             Padding(
               padding: const EdgeInsets.all(8.0),
-              child: Row(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Center(
-                      child: VehicleSelection(onChange: (value) {
-                        setState(() {
-                          _vehicleSelected = value;
-                        });
-                      }),
-                    ),
-                  )
-                ],
+              child: Center(
+                child: VehicleSelection(onChange: (value) {
+                  setState(() {
+                    _vehicleSelected = value;
+                  });
+                }),
               ),
             ),
             Expanded(

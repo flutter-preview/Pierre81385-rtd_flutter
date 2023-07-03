@@ -58,13 +58,14 @@ class _VehicleSelectionState extends State<VehicleSelection> {
     return DropdownButton(
       value: selectedValue,
       items: dropdownItems,
+      icon: Icon(Icons.train),
       onChanged: (value) {
         setState(() {
           selectedValue = value!;
         });
         widget.onChange(value!);
-        print(value);
-        print(selectedValue);
+        //print(value);
+        //print(selectedValue);
       },
     );
   }
