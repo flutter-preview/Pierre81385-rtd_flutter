@@ -294,10 +294,8 @@ class _RTDFeedState extends State<RTDFeed> {
                                                               builder:
                                                                   (context) =>
                                                                       MapView(
-                                                                        trip: vehicles[index]
-                                                                            .vehicle
-                                                                            .trip
-                                                                            .routeId,
+                                                                        stops:
+                                                                            stops,
                                                                         lat: vehicles[index]
                                                                             .vehicle
                                                                             .position
