@@ -53,8 +53,9 @@ class _MapViewState extends State<MapView> {
   }
 
   void getPoints() {
-    for (var i = 0; i < widget.stops.length - 1; i++) {
+    for (var i = 0; i < widget.stops.length; i++) {
       setState(() {
+        //add station marker for each index of widget.stops
         final stationMarker = Marker(
             markerId: MarkerId(widget.stops[i].stopId),
             position: LatLng(
@@ -64,23 +65,27 @@ class _MapViewState extends State<MapView> {
                 title:
                     stopData[widget.stops[i].stopId]!["stop_name"].toString()));
         _markers[widget.stops[i].stopId] = stationMarker;
-        points.add(Polyline(
-          polylineId: PolylineId(
-              stopData[widget.stops[i].stopId]!["stop_name"].toString()),
-          visible: true,
-          width: 5, //width of polyline
-          points: [
-            LatLng(
-                stopData[widget.stops[i].stopId]!["stop_lat"] as double,
-                stopData[widget.stops[i].stopId]!["stop_lon"]
-                    as double), //start point
-            LatLng(
-                stopData[widget.stops[i + 1].stopId]!["stop_lat"] as double,
-                stopData[widget.stops[i + 1].stopId]!["stop_lon"]
-                    as double), //end point
-          ],
-          color: Colors.deepPurpleAccent, //color of polyline
-        ));
+        //
+        if (i < widget.stops.length - 1) {
+          points.add(Polyline(
+            polylineId: PolylineId(
+                stopData[widget.stops[i].stopId]!["stop_name"].toString()),
+            visible: true,
+            width: 5, //width of polyline
+            points: [
+              LatLng(
+                  stopData[widget.stops[i].stopId]!["stop_lat"] as double,
+                  stopData[widget.stops[i].stopId]!["stop_lon"]
+                      as double), //start point
+              LatLng(
+                  stopData[widget.stops[i + 1].stopId]!["stop_lat"] as double,
+                  stopData[widget.stops[i + 1].stopId]!["stop_lon"]
+                      as double), //end point
+            ],
+            color: Colors.deepPurpleAccent, //color of polyline
+          ));
+        }
+
         // points.add({
         //   LatLng(stopData[widget.stops[i].stopId]!["stop_lat"] as double,
         //       stopData[widget.stops[i].stopId]!["stop_lon"] as double),
